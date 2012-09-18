@@ -1,0 +1,139 @@
+#!/usr/bin/env ruby
+
+# Copyright 2012 Paul Madden (maddenp@colorado.edu)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+basedir=File.dirname(File.expand_path($0))
+$: << basedir
+
+require 'test/unit'
+require 'fileutils'
+require 'nlh.rb'
+
+class TC_NamelistHandler < Test::Unit::TestCase
+
+  def setup
+    @nlsdir="testdata"
+    @fnl="#{@nlsdir}/namelist1"
+    @backup="#{@fnl}.testunit-backup"
+    @new="#{@nlsdir}/newnamelist"
+    @autobackup="#{@fnl}.original"
+    @badhandler=NamelistHandler.new("testdata/NO_SUCH_FILE")
+    @nlhandler1=NamelistHandler.new("testdata/namelist2")
+    @nlhandler2=NamelistHandler.new(@fnl)
+    @nlhandler3=NamelistHandler.new("testdata/namelist4")
+    @nlhandler4=NamelistHandler.new("testdata/namelist0")
+    @nlhandler5=NamelistHandler.new("testdata/namelist3")
+  end
+
+  def test_nlh
+    assert(!@badhandler.ok)
+    assert(@nlhandler1.ok)
+    assert_equal(@nlhandler1.lookup("NO_SUCH_NAMELIST","run_days"),nil)
+    assert_equal(@nlhandler1.lookup("time_control","NO_SUCH_KEY"),nil)
+    assert_equal("1",@nlhandler1.lookup("time_control","run_days"))
+    assert_equal("\"met_nmm.d<domain>.<date>\"",@nlhandler1.lookup("time_control","auxinput1_inname"))
+    assert_equal("1.000,0.994,0.983,0.968,0.950,0.930,0.908,0.882,0.853,0.821,0.788,0.752,0.715,0.677,0.637,0.597,0.557,0.517,0.477,0.438,0.401,0.365,0.332,0.302,0.274,0.248,0.224,0.201,0.179,0.158,0.138,0.118,0.098,0.078,0.058,0.038,0.018,0.000",@nlhandler1.lookup("domains","eta_levels"))
+    assert_equal("5,5",@nlhandler1.lookup("physics","mp_physics"))
+    assert_equal(".true.",@nlhandler1.lookup("bdy_control","specified"))
+    assert_equal("0",@nlhandler2.lookup("PREPnamelist","curve"))
+    assert_equal("'fim_restart_000300'",@nlhandler2.lookup("MODELnamelist","RestartFileName"))
+    assert_equal("'\"\"fim_gribtable\"\"'",@nlhandler2.lookup("POSTnamelist","gribtable"))
+    assert_equal("\"   'linear'\"",@nlhandler2.lookup("POSTnamelist","mode"))
+    assert_equal("'td3D','us3D','vs3D','ph3D','pr3D','sw2D','lw2D','ms2D','sn2D'",@nlhandler2.lookup("POSTnamelist","var_list"))
+    assert_equal("value01",@nlhandler3.lookup("tricky1","key01"))
+    assert_equal('"value02"',@nlhandler3.lookup("tricky1","key02"))
+    assert_equal("'value03'",@nlhandler3.lookup("tricky1","key03"))
+    assert_equal('"value\'04"',@nlhandler3.lookup("tricky1","key04"))
+    assert_equal("'value\"05'",@nlhandler3.lookup("tricky1","key05"))
+    assert_equal('"value""06"',@nlhandler3.lookup("tricky1","key06"))
+    assert_equal("'value''07'",@nlhandler3.lookup("tricky1","key07"))
+    assert_equal('"value!08"',@nlhandler3.lookup("tricky1","key08"))
+    assert_equal("'value!09'",@nlhandler3.lookup("tricky1","key09"))
+    assert_equal('"value!""10"',@nlhandler3.lookup("tricky1","key10"))
+    assert_equal("'value!''11'",@nlhandler3.lookup("tricky1","key11"))
+    assert_equal('"value!\'12"',@nlhandler3.lookup("tricky1","key12"))
+    assert_equal("'value!\"13'",@nlhandler3.lookup("tricky1","key13"))
+    assert_equal("value14",@nlhandler3.lookup("tricky1","key14"))
+    assert_equal("value15",@nlhandler3.lookup("tricky1","key15"))
+    assert_equal("value16",@nlhandler3.lookup("tricky1","key16"))
+    assert_equal('"value!17"',@nlhandler3.lookup("tricky1","key17"))
+    assert_equal('"value!""18"',@nlhandler3.lookup("tricky1","key18"))
+    assert_equal('"value!\'19"',@nlhandler3.lookup("tricky1","key19"))
+    assert_equal("'value!20'",@nlhandler3.lookup("tricky1","key20"))
+    assert_equal("'value!\'\'21'",@nlhandler3.lookup("tricky1","key21"))
+    assert_equal("'value!\"22'",@nlhandler3.lookup("tricky1","key22"))
+    assert_equal('"value!""!23"',@nlhandler3.lookup("tricky1","key23"))
+    assert_equal('"value!""!24"',@nlhandler3.lookup("tricky1","key24"))
+    assert_equal("'value!''!25'",@nlhandler3.lookup("tricky1","key25"))
+    assert_equal("(3.,4.)",@nlhandler4.lookup("TTDATA","TTCOMPLEX"))
+    assert_equal("2*'namelist  ','array     ',' the lot  '",@nlhandler4.lookup("AADATA","AACHAR"))
+    assert_equal("whatever",@nlhandler3.lookup("tricky2","key26"))
+    assert_equal(".true.",@nlhandler5.lookup("transports_nml","moc"))
+    assert_equal("10.",@nlhandler5.lookup("forcing_ws_nml","ws_data_renorm(1)"))
+    assert_equal('""',@nlhandler2.lookup("POSTnamelist","output"))
+    @nlhandler2.set("POSTnamelist","output","'VALUE1'")
+    assert_equal("'VALUE1'",@nlhandler2.lookup("POSTnamelist","output"))
+    @nlhandler2.set("POSTnamelist","OUTPUT","'VALUE1'")
+    assert_equal("'VALUE1'",@nlhandler2.lookup("POSTNAMELIST","output")) # test namelist case-insensitivity
+    @nlhandler2.set("postNAMELIST","output","'VALUE1'")
+    assert_equal("'VALUE1'",@nlhandler2.lookup("POSTnamelist","OutPut")) # test variable case-insensitivity
+    @nlhandler2.set("POSTnamelist","nosuchkey",'"VALUE2"')
+    assert_equal(nil,@nlhandler2.lookup("POSTnamelist","nosuchkey"))
+    @nlhandler2.set!("POSTnamelist","nosuchkey",'"VALUE2"')
+    assert_equal('"VALUE2"',@nlhandler2.lookup("POSTnamelist","nosuchkey"))
+    @nlhandler2.set!("postNAMELIST","nosuchkey",'"VALUE2"')
+    assert_equal('"VALUE2"',@nlhandler2.lookup("POSTnamelist","nosuchkey"))
+    @nlhandler2.set!("POSTnamelist","NOSUCHKEY",'"VALUE2"')
+    assert_equal('"VALUE2"',@nlhandler2.lookup("POSTnamelist","nosuchkey"))
+    assert_equal(nil,@nlhandler2.lookup("NOSUCHNAMELIST","nosuchkey"))
+    @nlhandler2.set!("NOSUCHNAMELIST","nosuchkey","VALUE3")
+    assert_equal("VALUE3",@nlhandler2.lookup("NOSUCHNAMELIST","nosuchkey"))
+    @nlhandler2.set("WFMnamelist","pe","TESTPE1")
+    assert_equal("TESTPE1",@nlhandler2.lookup("WFMnamelist","pe"))
+    @nlhandler2.set("WFMnamelist","pe","TESTPE2")
+    assert_equal("TESTPE2",@nlhandler2.lookup("WFMnamelist","pe"))
+    @nlhandler2.set("POSTnamelist","nsmooth_var","0,0,0,0,0,0,0,0,0")
+    assert_equal("0,0,0,0,0,0,0,0,0",@nlhandler2.lookup("POSTnamelist","nsmooth_var"))
+    @nlhandler2.set!("TESTnamelist","contraction1","\"you'd\"")
+    assert_equal("\"you'd\"",@nlhandler2.lookup("TESTnamelist","contraction1"))
+    @nlhandler2.set!("TESTnamelist","contraction2","'they''d'")
+    assert_equal("'they''d'",@nlhandler2.lookup("TESTnamelist","contraction2"))
+    @nlhandler5.set("forcing_ws_nml","ws_data_renorm(1)","11.")
+    assert_equal("11.",@nlhandler5.lookup("forcing_ws_nml","ws_data_renorm(1)"))
+    FileUtils.cp(@fnl,@backup)
+    assert(File.exists?(@backup))
+    @nlhandler2.write
+    assert(File.exists?(@autobackup))
+    @nlhandler2=NamelistHandler.new(@fnl)
+    assert_equal("'VALUE1'",@nlhandler2.lookup("POSTnamelist","output"))
+    assert_equal('"VALUE2"',@nlhandler2.lookup("POSTnamelist","nosuchkey"))
+    assert_equal("VALUE3",@nlhandler2.lookup("NOSUCHNAMELIST","nosuchkey"))
+    assert_equal("0",@nlhandler2.lookup("PREPnamelist","curve"))
+    assert_equal("'fim_restart_000300'",@nlhandler2.lookup("MODELnamelist","RestartFileName"))
+    # try a command line-based lookup
+    assert_equal("180",`nlh.rb #{@fnl} PHYSICSnamelist PhysicsInterval`.chomp)
+    @nlhandler2.set("PHYSICSnamelist","PhysicsInterval","360")
+    @nlhandler2.write(@new)
+    nlhandlernew=NamelistHandler.new(@new)
+    assert_equal("360",nlhandlernew.lookup("PHYSICSnamelist","PhysicsInterval"))
+  end
+
+  def teardown
+    FileUtils.mv(@backup,@fnl)
+    FileUtils.rm(@new)
+    FileUtils.rm(@autobackup)
+  end
+
+end

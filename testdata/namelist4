@@ -1,0 +1,33 @@
+&tricky1
+	key01=value01
+	key02="value02"
+	key03='value03'
+	key04="value'04"
+	key05='value"05'
+	key06="value""06"
+	key07='value''07'
+	key08="value!08"
+	key09='value!09'
+	key10="value!""10"
+	key11='value!''11'
+	key12="value!'12"
+	key13='value!"13'
+	key14=value14			! comment
+	key15=value15			! "comment"
+	key16=value16			! "comm!ent"
+	key17="value!17"		! "comm!ent"
+	key18="value!""18"	! "comm!ent"
+	key19="value!'19"		! "comm!ent"
+	key20='value!20'		! "comm!ent"
+	key21='value!''21'	! "comm!ent"
+	key22='value!"22'		! "comm!ent"
+	key23="value!""!23"	! "comm!ent"
+	key24="value!""!24"	! "comm!ent"
+	key25='value!''!25'	! "comm!ent"
+/
+
+This is a comment and should be ignored.
+
+&tricky2						! comm&ent
+	key26=whatever			! comm&ent
+/
