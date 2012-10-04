@@ -1,7 +1,7 @@
 nlh
 ===
 
-A tool for handling (querying & modifying) Fortran namelist files.
+A Ruby library and command-line tool for handling (querying & modifying) Fortran namelist files.
 
 ### Usage
 
