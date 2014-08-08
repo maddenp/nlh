@@ -3,6 +3,8 @@ nlh
 
 A Ruby library and command-line tool for handling (querying & modifying) Fortran namelist files.
 
+###Please use the [nml](https://github.com/maddenp/nml) tool instead, if possible.
+
 ### Usage
 
 `nlh.rb file namelist key [value]`
