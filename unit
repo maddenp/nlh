@@ -123,7 +123,7 @@ class TC_NamelistHandler < Test::Unit::TestCase
     assert_equal("0",@nlhandler2.lookup("PREPnamelist","curve"))
     assert_equal("'fim_restart_000300'",@nlhandler2.lookup("MODELnamelist","RestartFileName"))
     # try a command line-based lookup
-    assert_equal("180",`nlh.rb #{@fnl} PHYSICSnamelist PhysicsInterval`.chomp)
+    assert_equal("180",`./nlh.rb #{@fnl} PHYSICSnamelist PhysicsInterval`.chomp)
     @nlhandler2.set("PHYSICSnamelist","PhysicsInterval","360")
     @nlhandler2.write(@new)
     nlhandlernew=NamelistHandler.new(@new)
