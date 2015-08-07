@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/maddenp/nlh.svg)](https://travis-ci.org/maddenp/nlh)
+
 nlh
 ===
 
