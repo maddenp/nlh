@@ -1,7 +1,7 @@
-[![Build Status](https://travis-ci.org/maddenp/nlh.svg)](https://travis-ci.org/maddenp/nlh)
-
 nlh
 ===
+
+[![Build Status](https://travis-ci.org/maddenp/nlh.svg)](https://travis-ci.org/maddenp/nlh)
 
 A Ruby library and command-line tool for handling (querying & modifying) Fortran namelist files.
 
